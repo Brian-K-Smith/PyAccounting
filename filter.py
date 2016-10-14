@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """Write csv file where payee, category, subcategory columns of input file are modified according to rules in filter.
 
 This script is intended to assist in categorization of financial transactions retrieved from a bank website.

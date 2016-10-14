@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """Write csv file where specified columns have a regex applied and then a new column is made from each matched group.
 
 This script is intended to assist in categorization of product orders where the short and useful SKU string is

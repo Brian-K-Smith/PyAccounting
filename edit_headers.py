@@ -1,26 +1,21 @@
 #!/usr/bin/python3
-"""Write csv file where date/time columns in input file are manipulated and written to a new column in an output file.
-
-Spreadsheets are terrible at doing useful things with dates and times.
+"""Write csv file where specified column headers from an input file are modified.
 
 The script takes one required argument:
-filter=Path to a csv file containing the columns input column, date/time/datetime, input format, output format,
-       output header. The input and output format are as described here: http://arrow.readthedocs.io/en/latest/#tokens
+filter=Path to a csv file containing the columns input column (zero-based index), output column header
 
 The script takes the following optional arguments:
-input=Path to a csv file containing the designated input column.
+input=Path to a csv file containing the designated input columns.
 output=Path to write the output csv file. This file will be overwritten without warning if it exists.
 """
 import csv
 import argparse
-import arrow
 
 author = 'brian.k.smith@gmail.com'
 
-parser = argparse.ArgumentParser(description='Add a column with a modified date/time to a csv.')
-parser.add_argument('filter', help='Path to csv filter file with columns: input column, input format,'
-                                   'output format, output header')
-parser.add_argument('--input', help='Path to csv input file with a date, time, or datetime in the designated column(s).'
+parser = argparse.ArgumentParser(description='Set headers in a csv to the specified values.')
+parser.add_argument('filter', help='Path to csv filter file with columns: input column, output column header')
+parser.add_argument('--input', help='Path to csv input file with header(s) to modify.'
                                     ' Defaults to stdin.')
 parser.add_argument('--output', help='Path to csv output file. This file will be overwritten if it exists. Defaults'
                                      ' to stdout.')
@@ -48,17 +43,12 @@ with open(args.input, newline='', encoding='UTF-8', closefd=close_input) as inpu
     filters = []
     filter_headers = next(filter_reader)
     for filter_row in filter_reader:
-        filters.append([int(filter_row[0]), filter_row[1], filter_row[2], filter_row[3]])
-    # Set up output file with input headers and headers added by each regex
+        filters.append([int(filter_row[0]), filter_row[1]])
+    # Set up output file with input headers
     output_headers = next(in_reader)
-    for filt in filters:
-        output_headers.append(filt[3])
+    for filter in filters:
+        output_headers[filter[0]] = filter[1]
     out_writer.writerow(output_headers)
     # Iterate through input
     for row in in_reader:
-        out_row = row
-        # Perform each of the requested datetime operations on this row
-        for filt in filters:
-            in_datetime = arrow.get(row[filt[0]], filt[1])
-            out_row.append(in_datetime.format(filt[2]))
-        out_writer.writerow(out_row)
+        out_writer.writerow(row)

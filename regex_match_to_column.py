@@ -13,6 +13,8 @@ occurs).
 The script takes the following optional arguments:
 input=Path to a csv file to read data from. The first row should contain column headers.
 output=Path to write the output csv file. This file will be overwritten without warning if it exists.
+findall=Use the supplied regular expressions in findall mode, where it is used to find all non-overlapping matches,
+        outputting a semicolon-separated list in the designated column.
 """
 import csv
 import argparse
@@ -26,6 +28,7 @@ parser.add_argument('filter', help='Path to csv filter file with columns: column
 parser.add_argument('--input', help='Path to csv input file. Defaults to stdin.')
 parser.add_argument('--output', help='Path to csv output file. This file will be overwritten if it exists. Defaults'
                                      ' to stdout.')
+parser.add_argument('--findall', help='Operate in findall mode', action='store_true')
 
 args = parser.parse_args()
 
@@ -62,12 +65,28 @@ with open(args.input, newline='', encoding='UTF-8', closefd=close_input) as inpu
         out_row = row
         # Perform each of the requested regex matches on this row
         for filt in filters:
-            match = filt[1].match(row[filt[0]])
-            group = 0
-            for header in filt[2]:
-                group += 1
-                if match is None:
-                    out_row.append("")
-                else:
-                    out_row.append(match.group(group))
+            if args.findall:
+                matches = filt[1].findall(row[filt[0]])
+                group = 0
+                for header in filt[2]:
+                    group += 1
+                    if matches is None:
+                        out_row.append("")
+                    else:
+                        if filt[1].groups == 1:
+                            out_row.append(";".join(matches))
+                        else:
+                            grp_matches = []
+                            for m in matches:
+                                grp_matches.append(m[group])
+                            out_row.append(";".join(grp_matches))
+            else:
+                match = filt[1].match(row[filt[0]])
+                group = 0
+                for header in filt[2]:
+                    group += 1
+                    if match is None:
+                        out_row.append("")
+                    else:
+                        out_row.append(match.group(group))
         out_writer.writerow(out_row)

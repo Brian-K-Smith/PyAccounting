@@ -6,6 +6,8 @@ transacations."""
 
 import csv
 import argparse
+import re
+import sys
 
 author = 'brian.k.smith@gmail.com'
 
@@ -21,6 +23,8 @@ parser.add_argument('merge_columns', help='One or more zero-based integers indic
                     type=int)
 parser.add_argument('--output', help='Path to csv output file. This file will be overwritten if it exists. Defaults'
                                      ' to stdout.')
+parser.add_argument('--filter_column', help='Column in primary to look for a regex match before attempting collation.')
+parser.add_argument('--filter_regex', help='Regex used before attempting collation.')
 
 args = parser.parse_args()
 
@@ -43,7 +47,7 @@ with open(args.primary, newline='', encoding='UTF-8') as primary_file,\
     output_headers = primary_headers
     for i in args.merge_columns:
         output_headers.append(secondary_headers[i])
-    # Turn secondary file into dict indexed by the row to check for matches
+    # Turn secondary file into dict indexed by the column to check for matches
     secondary_dict = {}
     for row in secondary_reader:
         key = row[args.secondary_column]
@@ -52,10 +56,15 @@ with open(args.primary, newline='', encoding='UTF-8') as primary_file,\
             #       .format(str(row), secondary_dict[key]))
         secondary_dict[key] = [row[i] for i in args.merge_columns]
     # Iterate through primary file and see if there are any matches
-    unmatched = []
     out_writer = csv.writer(output_file)
     out_writer.writerow(output_headers)
     for row in primary_reader:
+        if args.filter_column and args.filter_regex:
+            match = re.search(args.filter_regex, row[int(args.filter_column)])
+            if not match:
+                print("Skipping {} because {} does not match {}."
+                      .format(",".join(row), row[int(args.filter_column)], args.filter_regex), file=sys.stderr)
+                continue
         try:
             to_match = row[args.primary_column]
             # print("Trying to find match for {}.".format(str(to_match)))

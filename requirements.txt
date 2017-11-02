@@ -1,2 +1,2 @@
-stripe == 1.63.0
+stripe==1.73.0
 arrow == 0.10.0

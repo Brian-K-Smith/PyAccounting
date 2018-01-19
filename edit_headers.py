@@ -46,8 +46,8 @@ with open(args.input, newline='', encoding='UTF-8', closefd=close_input) as inpu
         filters.append([int(filter_row[0]), filter_row[1]])
     # Set up output file with input headers
     output_headers = next(in_reader)
-    for filter in filters:
-        output_headers[filter[0]] = filter[1]
+    for filt in filters:
+        output_headers[filt[0]] = filt[1]
     out_writer.writerow(output_headers)
     # Iterate through input
     for row in in_reader:

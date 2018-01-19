@@ -47,20 +47,14 @@ stripe.api_version = args.api_version
 # Open required files
 # noinspection PyTypeChecker
 with open(args.output, mode='w', newline='', closefd=close_output) as output_file:
-    transactions = stripe.BalanceTransaction.all(created=
-                                                 {"gte": args.start_date.timestamp, "lte": args.end_date.timestamp},
-                                                 limit=100)
+    transactions = stripe.BalanceTransaction.list(created=
+                                                  {"gte": args.start_date.timestamp, "lte": args.end_date.timestamp})
 
     out_writer = csv.writer(output_file)
     # Set up output file with headers
     out_writer.writerow(["id", "amount", "available_on", "created", "currency", "description", "fee", "net", "source",
-                      "status", "type"])
-    while len(transactions.data) > 0:
-        for trans in transactions:
-            out_writer.writerow([trans.id, "${:6.2f}".format(trans.amount / 100), trans.available_on, trans.created,
-                                 trans.currency, trans.description, "${:6.2f}".format(trans.fee / 100),
-                                 "${:6.2f}".format(trans.net / 100), trans.source, trans.status, trans.type])
-        transactions = stripe.BalanceTransaction.all(created=
-                                                     {"gte": args.start_date.timestamp, "lte": args.end_date.timestamp},
-                                                     limit=100,
-                                                     starting_after=transactions.data[len(transactions.data) - 1].id)
+                         "status", "type"])
+    for trans in transactions.auto_paging_iter():
+        out_writer.writerow([trans.id, "${:6.2f}".format(trans.amount / 100), trans.available_on, trans.created,
+                             trans.currency, trans.description, "${:6.2f}".format(trans.fee / 100),
+                             "${:6.2f}".format(trans.net / 100), trans.source, trans.status, trans.type])

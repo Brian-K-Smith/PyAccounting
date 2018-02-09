@@ -1,4 +1,5 @@
 stripe == 1.66.0
-arrow == 0.10.0
+arrow == 0.12.1
 piecash == 0.12.0
 psycopg2==2.7.4
+

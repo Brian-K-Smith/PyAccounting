@@ -57,13 +57,10 @@ with open(args.input, newline='', encoding='UTF-8', closefd=close_input) as inpu
     for row in in_reader:
         transfer_id = row[int(args.column)]
         try:
-            transactions = stripe.BalanceTransaction.all(transfer=transfer_id, limit=100)
-            while len(transactions.data) > 0:
-                for trans in transactions:
-                    out_row = deepcopy(row)
-                    out_row.append(trans.source)
-                    out_writer.writerow(out_row)
-                transactions = stripe.BalanceTransaction.all(transfer=transfer_id, limit=100,
-                                                             starting_after=transactions.data[len(transactions.data) - 1].id)
+            transactions = stripe.BalanceTransaction.list(payout=transfer_id)
+            for trans in transactions.auto_paging_iter():
+                out_row = deepcopy(row)
+                out_row.append(trans.source)
+                out_writer.writerow(out_row)
         except stripe.error.InvalidRequestError:
             print("WARN: Could not find details for transfer {}.".format(transfer_id),file=sys.stderr)
